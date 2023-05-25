@@ -1,5 +1,5 @@
 from flask import jsonify
-from .models import Session, Stock
+from .models import PriceData, Session, Stock
 
 def get_stock_by_id(stock_id):
     session = Session()
@@ -34,8 +34,37 @@ def update_stock_price(stock_data):
     if not stock_id or not new_price:
         raise ValueError("Invalid Stock data. Please provide Valied ID.")
 
+    # Add a new record to the price data table
+    price_data = PriceData(stock_id=stock_id, price=new_price)
+    session.add(price_data)
 
     current_stock = session.query(Stock).filter(Stock.id == stock_id).one()
     current_stock.current_price = new_price
     session.commit()
     return jsonify({"status": "success"})
+
+# This endpoint retrieves the price data for the specified stock
+# , sorts it by timestamp, and converts it to a Plotly-compatible format.
+# We can then use a JavaScript library like Plotly.js to create a chart on
+# the front-end.
+
+# @app.route('/stocks/<int:stock_id>/chart')
+# def stock_chart(stock_id):
+#     # Retrieve the price data for the stock
+#     price_data = session.query(PriceData).filter(PriceData.stock_id == stock_id).all()
+
+#     # Convert the price data to a list of (timestamp, price) tuples
+#     data = [(pd.timestamp, pd.price) for pd in price_data]
+
+#     # Sort the data by timestamp
+#     data = sorted(data, key=lambda x: x[0])
+
+#     # Convert the data to a Plotly-compatible format
+#     chart_data = {
+#         'x': [d[0] for d in data],
+#         'y': [d[1] for d in data],
+#         'type': 'scatter',
+#         'mode': 'lines+markers'
+#     }
+
+#     return jsonify(chart_data)
